@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Субпиксельное плотное заполнение круга</title>
+  <title>Заполнение крестом из центра</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -35,8 +35,8 @@
 </div>
 
 <div class="slider-container">
-  <label>Радиус маленьких кружков: <span id="smallRadiusVal">1</span></label>
-  <input type="range" id="smallRadius" min="0.5" max="30" value="1" step="0.1">
+  <label>Радиус маленьких кружков: <span id="smallRadiusVal">5</span></label>
+  <input type="range" id="smallRadius" min="0.5" max="30" value="5" step="0.1">
 </div>
 
 <div>
@@ -71,30 +71,44 @@
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Плотное гексагональное заполнение
     let count = 0;
-    const rowHeight = r * Math.sqrt(3); // расстояние между рядами
-    for (let y = -R + r; y <= R - r; y += rowHeight) {
-      const offset = (Math.round(y / rowHeight) % 2) * r; // смещение для чередующихся рядов
-      for (let x = -R + r + offset; x <= R - r; x += 2 * r) {
-        if (x*x + y*y <= (R - r)*(R - r)) {
-          ctx.beginPath();
-          ctx.arc(canvasCenter.x + x, canvasCenter.y + y, r, 0, Math.PI * 2);
-          ctx.fillStyle = '#3498db';
-          ctx.fill();
-          count++;
-        }
+
+    // Функция рисования одного кружка, если он в пределах большого круга
+    function tryDrawCircle(x, y) {
+      const dx = x - canvasCenter.x;
+      const dy = y - canvasCenter.y;
+      if (dx*dx + dy*dy <= (R - r)*(R - r)) {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#3498db';
+        ctx.fill();
+        count++;
+      }
+    }
+
+    // Заполнение из центра крестом
+    const step = r * 2; // расстояние между кружками
+    for (let layer = 0; layer <= R; layer += step) {
+      // Горизонтальная и вертикальная линии
+      for (let offset = -layer; offset <= layer; offset += step) {
+        tryDrawCircle(canvasCenter.x + offset, canvasCenter.y + layer); // верхняя горизонталь
+        tryDrawCircle(canvasCenter.x + offset, canvasCenter.y - layer); // нижняя горизонталь
+        tryDrawCircle(canvasCenter.x + layer, canvasCenter.y + offset); // правая вертикаль
+        tryDrawCircle(canvasCenter.x - layer, canvasCenter.y + offset); // левая вертикаль
+      }
+      // Диагонали (опционально для более плотного заполнения)
+      for (let d = -layer + step; d < layer; d += step) {
+        tryDrawCircle(canvasCenter.x + d, canvasCenter.y + d); // диагональ \
+        tryDrawCircle(canvasCenter.x + d, canvasCenter.y - d); // диагональ /
       }
     }
 
     countDisplay.textContent = count;
   }
 
-  // Слушатели ползунков
   bigRadiusSlider.addEventListener('input', draw);
   smallRadiusSlider.addEventListener('input', draw);
 
-  // Начальное рисование
   draw();
 </script>
 
