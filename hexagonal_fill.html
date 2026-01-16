@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Гексагональное плотное заполнение круга</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    .slider-container {
+      margin: 10px 0;
+      width: 300px;
+    }
+    .slider-container label {
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas" width="500" height="500"></canvas>
+
+<div class="slider-container">
+  <label>Радиус большого круга: <span id="bigRadiusVal">150</span></label>
+  <input type="range" id="bigRadius" min="50" max="200" value="150" step="1">
+</div>
+
+<div class="slider-container">
+  <label>Радиус маленьких кружков: <span id="smallRadiusVal">5</span></label>
+  <input type="range" id="smallRadius" min="1" max="30" value="5" step="0.1">
+</div>
+
+<div>
+  Количество маленьких кружков: <span id="count">0</span>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const bigRadiusSlider = document.getElementById('bigRadius');
+  const smallRadiusSlider = document.getElementById('smallRadius');
+  const bigRadiusVal = document.getElementById('bigRadiusVal');
+  const smallRadiusVal = document.getElementById('smallRadiusVal');
+  const countDisplay = document.getElementById('count');
+
+  const canvasCenter = { x: canvas.width / 2, y: canvas.height / 2 };
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const R = parseFloat(bigRadiusSlider.value);
+    const r = parseFloat(smallRadiusSlider.value);
+
+    bigRadiusVal.textContent = R.toFixed(1);
+    smallRadiusVal.textContent = r.toFixed(1);
+
+    // Рисуем большой круг
+    ctx.beginPath();
+    ctx.arc(canvasCenter.x, canvasCenter.y, R, 0, Math.PI * 2);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Гексагональное заполнение
+    let count = 0;
+    const dx = 2 * r;
+    const dy = Math.sqrt(3) * r;
+
+    for (let row = -Math.ceil(R / dy); row <= Math.ceil(R / dy); row++) {
+      const y = row * dy;
+      const offset = (row % 2) * r;
+      for (let col = -Math.ceil(R / dx); col <= Math.ceil(R / dx); col++) {
+        const x = col * dx + offset;
+        if (x*x + y*y <= (R - r)*(R - r)) {
+          ctx.beginPath();
+          ctx.arc(canvasCenter.x + x, canvasCenter.y + y, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#3498db';
+          ctx.fill();
+          count++;
+        }
+      }
+    }
+
+    countDisplay.textContent = count;
+  }
+
+  bigRadiusSlider.addEventListener('input', draw);
+  smallRadiusSlider.addEventListener('input', draw);
+
+  draw();
+</script>
+
+</body>
+</html>
